@@ -7,3 +7,5 @@ if __name__ == '__main__':
     window = logining_window()
     window.show()
     sys.exit(app.exec())
+
+print('program close')
