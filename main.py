@@ -8,4 +8,5 @@ if __name__ == '__main__':
     window.show()
     sys.exit(app.exec())
 
-print('program close')
+# print('program close')
+

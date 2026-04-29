@@ -42,18 +42,31 @@ class User_Info_Form(QMainWindow):
         self.image.setGeometry(20, 20, 250, 240)
         self.image.setPixmap(QPixmap())
         self.image.setScaledContents(True)
+        self.image_url = null
 
         self.name_label = QLabel("Имя ", parent=self)
         self.name_label.setGeometry(280, 20, style.Label_Width, style.Label_Height)
+        
+        self.inp_name = QLineEdit(parent=self)
+        self.inp_name.setGeometry(340, 20, style.Input_Width, style.Input_Height)
 
         self.fam_label = QLabel("Фамилия ", parent=self)
         self.fam_label.setGeometry(280, 60, style.Label_Width, style.Label_Height)
+        
+        self.inp_fam = QLineEdit(parent=self)
+        self.inp_fam.setGeometry(340, 60, style.Input_Width, style.Input_Height)
 
         self.phone_label = QLabel("Тел. ", parent=self)
         self.phone_label.setGeometry(280, 100, style.Label_Width, style.Label_Height)
 
+        self.inp_phone = QLineEdit(parent=self)
+        self.inp_phone.setGeometry(340, 100, style.Input_Width, style.Input_Height)
+
         self.login_label = QLabel("login ", parent=self)
         self.login_label.setGeometry(280, 140, style.Label_Width, style.Label_Height)
+
+        self.inp_login = QLineEdit(parent=self)
+        self.inp_login.setGeometry(340, 140, style.Input_Width, style.Input_Height)
 
         self.password_svap = QPushButton("Изменить пароль", parent=self)
         self.password_svap.setGeometry(280, 220, style.Big_button_Width, style.Big_button_Height)
@@ -63,26 +76,39 @@ class User_Info_Form(QMainWindow):
         self.button_select_image.setGeometry(20, 280, style.Big_button_Width, style.Big_button_Height)
         self.button_select_image.clicked.connect(self.select_new_image)
 
+        self.button_save = QPushButton("Сохранить", parent=self)
+        self.button_save.setGeometry(280, 280, style.Big_button_Width, style.Big_button_Height)
+        self.button_save.clicked.connect(self.save_info)
+
+        self.dialog = QDialog()
+
     def pas_svap(self):
-        dialog = QDialog()
-        dialog.setWindowTitle("Сменить пароль")
-        dialog.setGeometry(100,100,300,200)
+        self.dialog.setWindowTitle("Сменить пароль")
+        self.dialog.setGeometry(100,100,300,200)
 
-        dialog.inp1 = QLineEdit(parent=dialog)
-        dialog.inp2 = QLineEdit(parent=dialog)
+        self.dialog.inp1 = QLineEdit(parent=self.dialog)
+        self.dialog.inp2 = QLineEdit(parent=self.dialog)
         
-        dialog.lab1 = QLabel("Введите новый пароль", parent=dialog)
-        dialog.lab2 = QLabel("Подтвердите новый пароль", parent=dialog)
+        self.dialog.lab1 = QLabel("Введите старый пароль пароль", parent=self.dialog)
+        self.dialog.lab2 = QLabel("Введите новый пароль", parent=self.dialog)
 
-        dialog.lab1.setGeometry(20,10,260,30)
-        dialog.lab2.setGeometry(20,70,260,30)
+        self.dialog.lab1.setGeometry(20,10,260,30)
+        self.dialog.lab2.setGeometry(20,70,260,30)
 
-        dialog.inp1.setGeometry(20, 40, 260, 30)
-        dialog.inp2.setGeometry(20, 100, 260, 30)
+        self.dialog.inp1.setGeometry(20, 40, 260, 30)
+        self.dialog.inp2.setGeometry(20, 100, 260, 30)
 
-        dialog.ok = QPushButton("Подтвердить",parent=dialog)
-        dialog.ok.setGeometry(20, 140, 260, style.Big_button_Height)
-        dialog.exec()
+        self.dialog.ok = QPushButton("Подтвердить", parent=self.dialog)
+        self.dialog.ok.setGeometry(20, 140, 260, style.Big_button_Height)
+        self.dialog.ok.clicked.connect(self.password_swap)
+        self.dialog.exec()
+
+    def password_swap(self):
+        if hash_password(self.dialog.inp1.text()) == self.active_user.password:
+            user = session.query(Users).get(self.active_user.id_users)
+            user.password = hash_password(self.dialog.inp2.text())
+            session.commit()
+            self.dialog.hide()
 
     def closeEvent(self, ivent):
         self.prev_window.show()
@@ -92,12 +118,37 @@ class User_Info_Form(QMainWindow):
         file_path = QFileDialog.getOpenFileName(self, "Выберите файл", '', "Изображения (*.png *.jpeg *.jpg);;Все файлы (*.*)")
         print(file_path[0])
         self.image.setPixmap(QPixmap(file_path[0]))
+        self.image_url = file_path[0]
+
+    def save_info(self):
+        # masege_form = QDialogButtonBox()
+        result = QMessageBox.critical(#warning
+        None,
+        "Изменить",
+        "Подтвердить изменения",
+        QMessageBox.Yes | QMessageBox.No
+        # QMessageBox.Warning
+    )
+        if result == QMessageBox.Yes:
+            user = session.query(Users).get(self.active_user.id_users)
+            user.name = self.inp_name.text()
+            user.sure_name = self.inp_fam.text()
+            user.phone = self.inp_phone.text()
+            user.login = self.inp_login.text()
+            user.image = self.image_url
+            session.commit()
+            print("Изменения успешны")
+        else:
+            print("Изменения не внесены")
+
+        return result == QMessageBox.Yes
 
 class Book_Info_form(QMainWindow):
     def __init__(self):
         super().__init__()
 
         self.id_book = null
+        self.authors_mass = []
 
         self.setWindowTitle('')
         self.setGeometry(80, 80, 700, 700)
@@ -106,6 +157,7 @@ class Book_Info_form(QMainWindow):
         self.image.setGeometry(20, 20, 250, 370)
         self.image.setPixmap(QPixmap())
         self.image.setScaledContents(True)
+        self.image_url = null
 
         self.H1 = QLabel("", parent=self)#Title_book
         self.H1.setGeometry(300, 20, 350, 250)
@@ -169,14 +221,17 @@ class Book_Info_form(QMainWindow):
         # QMessageBox.Warning
     )
         if result == QMessageBox.Yes:
-            result = True
+            book = session.query(Book).get(self.id_book)
+            book.book_title = self.Input_info_titile_book.text()
+            book.in_stock = self.Input_info_in_stock.text()
+            book.publication_date = self.Input_info_date.text()
+            book.pictcher = self.image_url
+            session.commit()
+            print("Изменения успешны")
         else:
-            result = False
+            print("Изменения не внесены")
 
-
-        print(result)
         return result == QMessageBox.Yes
-
 
     def drop_form_info(self):
         # book = session.query(Book).filter_by(book_title = self.windowTitle()).all()
@@ -192,6 +247,7 @@ class Book_Info_form(QMainWindow):
         file_path = QFileDialog.getOpenFileName(self, "Выберите файл", '', "Изображения (*.png *.jpeg *.jpg);;Все файлы (*.*)")
         print(file_path[0])
         self.image.setPixmap(QPixmap(file_path[0]))
+        self.image_url = file_path[0]
 
 class Catalog_books_form(QMainWindow):
     def __init__(self):
@@ -234,9 +290,8 @@ class Catalog_books_form(QMainWindow):
                     case 3:
                         self.Info = QPushButton('Подробнее', parent=self)
                         self.Info.clicked.connect(lambda checked, book = books[r]: self.book_info(book))
-                        # self.Info.row, self.Info.col = r, c
                         self.table.setCellWidget(r, c, self.Info)
-    
+                        
     def book_info(self, book):
         self.work_window = Book_Info_form()
         self.work_window.id_book = book.id_book
@@ -245,8 +300,9 @@ class Catalog_books_form(QMainWindow):
         self.work_window.Input_info_titile_book.setText(book.book_title)
         self.work_window.Input_info_date.setDate(book.publication_date)
         self.work_window.Input_info_in_stock.setValue(book.in_stock)
-        self.work_window.table_author.setRowCount(len(book.authors_book))
+        self.work_window.table_author.setRowCount(len(book.authors_book)+1)
         authors = book.authors_book
+        self.work_window.image_url = book.pictcher
         for row in range(len(authors)):
             for col in range(self.work_window.table_author.columnCount()):
                 match col:
@@ -256,15 +312,94 @@ class Catalog_books_form(QMainWindow):
                         self.work_window.table_author.setItem(row, col, QTableWidgetItem(str(authors[row].author.name)))
                     case 1:
                         self.work_window.table_author.setItem(row, col, QTableWidgetItem(str(authors[row].author.sure_name)))
+        row = self.work_window.table_author.rowCount()-1
+        self.work_window.table_author.setSpan(row, 0, 1, 2)
+        self.add_author_button = QPushButton("Добавить", parent=self)
+        self.add_author_button.clicked.connect(lambda checked, book = book: self.author_list(book))
+        self.work_window.table_author.setCellWidget(row, 1, self.add_author_button)
 
         types_book = book.book_types
-        self.work_window.table_types.setRowCount(len(types_book))
+        self.work_window.table_types.setRowCount(len(types_book)+1)
         # print(f"Количество строк в таблице: {self.work_window.table_types.rowCount()}")
         for i in range(len(types_book)):
-            # print(types_book[i].type_book.book_type)
             self.work_window.table_types.setItem(i, 0, QTableWidgetItem(str(types_book[i].type_book.book_type)))
+        row = self.work_window.table_types.rowCount()-1
+        self.add_types_button = QPushButton("Добавть", parent=self)
+        self.work_window.table_types.setCellWidget(row, 0, self.add_types_button)
+
         self.work_window.show()
         self.work_window.setWindowTitle(f"{book.book_title}")
+
+    def author_list(self, book):
+        self.form_authors = QDialog()
+        self.form_authors.setWindowTitle("Авторы")
+        self.form_authors.setGeometry(50, 50, 300, 300)
+        
+        self.form_authors.table = QTableWidget(1, 3, parent=self.form_authors)
+        self.form_authors.table.setGeometry(0,0,300,300)
+        self.form_authors.table.setHorizontalHeaderLabels(['Имя', 'Фамилия', "♥"])
+
+        authors1 = session.query(Author).all()
+
+        self.form_authors.table.setRowCount(len(authors1))
+        
+        def redact_authors(book, author, checked, session):
+            print(checked)
+            try:
+                if checked:
+                    # проверяем, нет ли уже связи
+                    existing = session.query(Authors_book).filter_by(
+                        author_id_author=author.id_author,
+                        book_id_book=book.id_book
+                    ).first()
+                    print(existing)
+                    if existing == None:
+                        link = Authors_book(author_id_author=author.id_author, book_id_book=book.id_book)
+                        session.add(link)
+                        session.commit()
+                        print(f"Связь {author.name}–{book.book_title} добавлена")
+
+                else:
+                    # удаляем связь
+                    deleted = session.query(Authors_book).filter_by(
+                        author_id_author=author.id_author,
+                        book_id_book=book.id_book
+                    ).delete()
+                    print(deleted)
+
+                    session.commit()
+                    if deleted > 0:
+                        print(f"Связь {author.name}–{book.book_title} удалена")
+                    else:
+                        print("Связь автор–книга не найдена")
+
+            except Exception as e:
+                session.rollback()
+                print("Ошибка при изменении связи:", type(e), e)
+
+        for row in range(len(authors1)):
+            for col in range(3):
+                match col:
+                    case 0:
+                        self.form_authors.table.setItem(row, col, QTableWidgetItem(str(authors1[row].name)))
+                    case 1:
+                        self.form_authors.table.setItem(row, col, QTableWidgetItem(str(authors1[row].sure_name)))
+                    case 2:
+                        ch_box = QCheckBox(parent=self)
+                        for i in book.authors_book:
+                            if authors1[row].id_author == i.author.id_author:
+                                ch_box.setChecked(True)
+                            def make_handler(book, author):
+                                def handler(checked):
+                                    redact_authors(book, author, checked, session)
+                                return handler
+
+                        ch_box.clicked.connect(make_handler(book, authors1[row]))
+                        self.form_authors.table.setCellWidget(row, col, ch_box)
+        
+        self.form_authors.exec()
+
+        
 
     def closeEvent(self, ivent):
         self.prev_window.show()
@@ -299,11 +434,12 @@ class librarian_window(QMainWindow):
         self.work_window.prev_window = self
         self.work_window.show()
         self.work_window.active_user = self.active_user
-        self.work_window.name_label.setText(f"Имя: {self.work_window.active_user.name}")
-        self.work_window.fam_label.setText(f"Фамилия: {self.work_window.active_user.sure_name}")
-        self.work_window.phone_label.setText(f"Тел: {self.work_window.active_user.phone}")
-        self.work_window.login_label.setText(f"Логин: {self.work_window.active_user.login}")
+        self.work_window.inp_name.setText(self.work_window.active_user.name)
+        self.work_window.inp_fam.setText(f"{self.work_window.active_user.sure_name}")
+        self.work_window.inp_phone.setText(f"{self.work_window.active_user.phone}")
+        self.work_window.inp_login.setText(f"{self.work_window.active_user.login}")
         self.work_window.image.setPixmap(QPixmap(self.work_window.active_user.image))
+        self.work_window.image_url = self.work_window.active_user.image
         self.hide()
 
     def catalog_books_form_show(self):

@@ -18,6 +18,7 @@ class Users(Base):
     phone = Column(String)
     login = Column(String)
     password = Column(String)
+    image = Column(String)
     reader_tickets = relationship('Reader_Ticket', back_populates='user')
     user_roles = relationship('User_roles', back_populates='user')
  
@@ -53,7 +54,6 @@ class Reader_Ticket(Base):#+
     user = relationship('Users', back_populates='reader_tickets')
     books_reader = relationship('Books_Reader', back_populates='reader_tickets')
     
-
 class Type_book(Base):#+
     __tablename__ = 'type_book'
     id_type_book = Column(Integer, primary_key=True)
@@ -77,8 +77,7 @@ class Books_Reader(Base):#+
     id_book = Column(Integer, ForeignKey('book.id_book'))
     id_ticket = Column(Integer,ForeignKey("reader_ticket.id_ticket"))
     book = relationship('Book', back_populates='books_reader')
-    reader_tickets = relationship('Reader_Ticket', back_populates='books_reader')
-    
+    reader_tickets = relationship('Reader_Ticket', back_populates='books_reader') 
 
 class Book_types(Base):#+
     __tablename__ = 'book_types'
@@ -96,12 +95,9 @@ class Authors_book(Base):#+
     author = relationship('Author', back_populates='authors_book')
     book = relationship('Book', back_populates='authors_book')
 
-# books = session.query(Reader_Ticket).all()
+# author = session.query(Authors_book).filter(Authors_book.book_id_book == book)
 
-# for b in books:
-#     print(f"Читатель {b.name_reader} {b.sure_name_reader}")
-#     print(f"Читает ")
-#     for i in b.books_reader:
-#         print(i.book.book_title)
+# for b in author:
+#     print(b.name)
 
 print('connect as databese sucsecful')
